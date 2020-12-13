@@ -1,5 +1,8 @@
 package com.f0cus.useroperations.controller;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
@@ -8,9 +11,10 @@ import java.util.Optional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,6 +34,9 @@ public class UserController {
 	
 	@Autowired
 	private UserRepository userRepository;
+	
+	@Autowired
+	private MessageSource messageSource;
 	
 	@GetMapping("/users/test")
 	public User testUserController() {
@@ -55,8 +62,8 @@ public class UserController {
 			return resource;
 		}
 
-		throw new UserNotFoundException("User with id: "+ id + " does not exist");
-		//return null;
+		throw new UserNotFoundException(messageSource.getMessage("message.user_not_found_exception"
+				, null, LocaleContextHolder.getLocale()) + id);
 	}
 
 	@PostMapping("/users")
@@ -79,6 +86,7 @@ public class UserController {
 			userRepository.deleteById(id);
 			return new ResponseEntity<User>(deleteUser.get(),HttpStatus.OK);
 		}
-		throw new UserNotFoundException("User with id: "+ id + " does not exist");
+		throw new UserNotFoundException(messageSource.getMessage("message.user_not_found_exception"
+				, null, LocaleContextHolder.getLocale()) + id);
 	}
 }

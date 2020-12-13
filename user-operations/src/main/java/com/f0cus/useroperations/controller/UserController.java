@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,7 +59,7 @@ public class UserController {
 	}
 	
 	@PostMapping("/users/createWithResponseEntity")
-	public ResponseEntity<User> createUserReturnResponseEntity(@RequestBody User userInput) {
+	public ResponseEntity<User> createUserReturnResponseEntity(@Valid @RequestBody User userInput) {
 		User newUser = userRepository.save(userInput);
 		if(newUser != null && newUser.getId() > 0) {
 			URI newUri = ServletUriComponentsBuilder

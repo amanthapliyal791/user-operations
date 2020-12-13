@@ -14,6 +14,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.f0cus.useroperations.exception.GenericException;
+import com.f0cus.useroperations.exception.UserNotFoundException;
 
 @RestController
 @ControllerAdvice
@@ -26,6 +27,13 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 		return response;
 	}
 
+	@ExceptionHandler(UserNotFoundException.class)
+	public ResponseEntity<Object> handleNotFoundException(Exception exception, WebRequest request) {
+		GenericException gexp = new GenericException(LocalDateTime.now(), exception.getMessage(),request.getDescription(false));
+		ResponseEntity<Object> response = new ResponseEntity<>(gexp,HttpStatus.NOT_FOUND);
+		return response;
+	}
+	
 	@Override
 	public ResponseEntity<Object> handleMethodArgumentNotValid(
 			MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {

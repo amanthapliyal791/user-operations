@@ -8,6 +8,9 @@ import java.util.Optional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,35 +43,34 @@ public class UserController {
 	}
 
 	@GetMapping("/users/{id}")
-	public User getUser(@PathVariable int id) {
+	public EntityModel<User> getUser(@PathVariable int id) {
 		Optional<User> optionalUser = userRepository.findById(id);
 		if(optionalUser.isPresent()) {
-			return optionalUser.get();
+			EntityModel<User> resource = EntityModel.of(optionalUser.get());
+			
+			WebMvcLinkBuilder linkTo = 
+					linkTo(methodOn(this.getClass()).getAllUsers());
+			
+			resource.add(linkTo.withRel("get-all-users"));
+			return resource;
 		}
+
 		throw new UserNotFoundException("User with id: "+ id + " does not exist");
 		//return null;
 	}
-	
-	@PostMapping("/users/create")
-	public String createUser(@RequestBody User userInput) {
-		User newUser = userRepository.save(userInput);
-		if(newUser != null && newUser.getId() > 0) {
-			return "User created, Id is : "+ newUser.getId();
-		}
-		return "User creation failed";
-	}
-	
-	@PostMapping("/users/createWithResponseEntity")
+
+	@PostMapping("/users")
 	public ResponseEntity<User> createUserReturnResponseEntity(@Valid @RequestBody User userInput) {
 		User newUser = userRepository.save(userInput);
 		if(newUser != null && newUser.getId() > 0) {
-			URI newUri = ServletUriComponentsBuilder
-							.fromPath("http:////localhost:8080/users/{id}")
+			URI newUri = ServletUriComponentsBuilder.fromCurrentRequest()
+							.path("/{id}")
 							.buildAndExpand(newUser.getId()).toUri();
 			return ResponseEntity.created(newUri).build();
 		}
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	}
+
 	
 	@DeleteMapping("/users/{id}")
 	public ResponseEntity<User> deleteUser(@PathVariable int id){

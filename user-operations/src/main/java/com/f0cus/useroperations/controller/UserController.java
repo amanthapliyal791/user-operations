@@ -26,8 +26,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.f0cus.useroperations.entity.User;
+import com.f0cus.useroperations.exception.GenericException;
 import com.f0cus.useroperations.exception.UserNotFoundException;
 import com.f0cus.useroperations.repository.UserRepository;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 
 @RestController
 public class UserController {
@@ -38,17 +46,63 @@ public class UserController {
 	@Autowired
 	private MessageSource messageSource;
 	
+	@Operation(description="Test API Availability",
+				summary="Checks if the API is running or not",
+				method="GET",
+				responses= {@ApiResponse(responseCode="200", content= {@Content(mediaType="application/json"),@Content(mediaType="application/xml")}),
+							@ApiResponse(responseCode="404", content= {@Content(mediaType="application/json"),@Content(mediaType="application/json")})
+					}
+			)
 	@GetMapping("/users/test")
 	public User testUserController() {
 		//return "user controller is good to go!";
 		return new User(1,"Test User",LocalDate.now());
 	}
 
+	
+	@Operation(description="Get All Users",
+			summary="Fetch details of all users in the form of an array",
+			method="GET",
+			responses= {@ApiResponse(responseCode="200", 
+									 content= {@Content(mediaType="application/json", 
+									 					array=@ArraySchema(schema=@Schema(implementation=User.class))),
+											   @Content(mediaType="application/xml",
+													   array=@ArraySchema(schema=@Schema(implementation=User.class)))
+											  }
+									),
+					@ApiResponse(responseCode="404", 
+					 			 content= {@Content(mediaType="application/json", 
+					 								schema=@Schema(implementation=GenericException.class)),
+											@Content(mediaType="application/xml", 
+						 							schema=@Schema(implementation=GenericException.class))
+										  }
+								)
+						}
+				)
 	@GetMapping("/users")
 	public List<User> getAllUsers() {
 		return userRepository.findAll();
 	}
 
+	@Operation(description="Get User Details",
+			summary="Fetch details of a particular user",
+			method="GET",
+			responses= {@ApiResponse(responseCode="200", 
+									 content= {@Content(mediaType="application/json", 
+									 					schema=@Schema(implementation=User.class)),
+											   @Content(mediaType="application/xml",
+													   schema=@Schema(implementation=User.class))
+											  }
+									),
+					@ApiResponse(responseCode="404", 
+					 			 content= {@Content(mediaType="application/json", 
+					 								schema=@Schema(implementation=GenericException.class)),
+											@Content(mediaType="application/xml", 
+						 							schema=@Schema(implementation=GenericException.class))
+										  }
+								)
+						}
+				)	
 	@GetMapping("/users/{id}")
 	public EntityModel<User> getUser(@PathVariable int id) {
 		Optional<User> optionalUser = userRepository.findById(id);
@@ -66,6 +120,19 @@ public class UserController {
 				, null, LocaleContextHolder.getLocale()) + id);
 	}
 
+	@Operation(description="Create User",
+				summary="Create a new User in system",
+				method="POST",
+				responses= {@ApiResponse(responseCode="201"),
+							@ApiResponse(responseCode="500", 
+										content= {@Content(mediaType="application/json", 
+					 								schema=@Schema(implementation=GenericException.class)),
+												@Content(mediaType="application/xml", 
+						 							schema=@Schema(implementation=GenericException.class))
+												}
+									)
+							}
+				)
 	@PostMapping("/users")
 	public ResponseEntity<User> createUserReturnResponseEntity(@Valid @RequestBody User userInput) {
 		User newUser = userRepository.save(userInput);
@@ -78,7 +145,19 @@ public class UserController {
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	}
 
-	
+	@Operation(description="Delete User",
+			summary="Delete an existing User",
+			method="DELETE",
+			responses= {@ApiResponse(responseCode="200"),
+						@ApiResponse(responseCode="500", 
+									content= {@Content(mediaType="application/json", 
+				 								schema=@Schema(implementation=GenericException.class)),
+											@Content(mediaType="application/xml", 
+					 							schema=@Schema(implementation=GenericException.class))
+											}
+								)
+						}
+			)
 	@DeleteMapping("/users/{id}")
 	public ResponseEntity<User> deleteUser(@PathVariable int id){
 		Optional<User> deleteUser = userRepository.findById(id);
